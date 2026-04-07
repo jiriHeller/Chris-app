@@ -227,12 +227,12 @@ const BASE_HABITS = {
     { id:"cviceni",    label:"Cvičení",     time:"Dopoledne",  emoji:"🏋️", color:C.green, xp:20, notifyAt:"10:00" },
   ],
   evening: [
-    { id:"cteni",       label:"Čtení",       time:"Večer",       emoji:"📖", color:C.purple, xp:15, notifyAt:"19:00" },
-    { id:"vecerniZuby", label:"Čistit zuby", time:"Před spaním", emoji:"🦷", color:C.blue,   xp:10, notifyAt:"20:30" },
-    { id:"vecerniLeky", label:"Večerní léky",time:"Noc",         emoji:"💊", color:C.red,    xp:10, notifyAt:"20:45" },
+    { id:"cteni",       label:"Čtení",       time:"Večer",       emoji:"📖", color:C.purple, xp:15, notifyAt:"19:30" },
+    { id:"vecerniLeky", label:"Večerní léky",time:"Před spaním", emoji:"💊", color:C.red,    xp:10, notifyAt:"20:10" },
+    { id:"vecerniZuby", label:"Čistit zuby", time:"Před spaním", emoji:"🦷", color:C.blue,   xp:10, notifyAt:"20:20" },
   ],
   schoolPrep: [
-    { id:"pripravaDoSkoly", label:"Příprava do školy", time:"Večer – na zítra", emoji:"🎒", color:C.orange, xp:15, notifyAt:"19:30" },
+    { id:"pripravaDoSkoly", label:"Příprava do školy", time:"Večer – na zítra", emoji:"🎒", color:C.orange, xp:15, notifyAt:"18:30" },
   ],
 };
 
