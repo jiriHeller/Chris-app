@@ -217,24 +217,33 @@ const DEFAULT_ACTIVITIES = [
 // ─── FIXED HABITS ─────────────────────────────────────────────────────────────
 const BASE_HABITS = {
   morning: [
-    { id:"ranniLeky",  label:"Ranní léky",  time:"Ráno",       emoji:"💊", color:C.red,  xp:10 },
-    { id:"ranniZuby",  label:"Čistit zuby", time:"Po snídani", emoji:"🦷", color:C.blue, xp:10 },
+    { id:"ranniLeky",  label:"Ranní léky",  time:"Ráno",       emoji:"💊", color:C.red,    xp:10, notifyAt:"7:00"  },
+    { id:"ranniZuby",  label:"Čistit zuby", time:"Po snídani", emoji:"🦷", color:C.blue,   xp:10, notifyAt:"7:15"  },
   ],
   weekdayAfternoon: [
-    { id:"cviceni",    label:"Cvičení",     time:"Odpoledne",  emoji:"⚽", color:C.green,  xp:20 },
+    { id:"cviceni",    label:"Cvičení",     time:"Odpoledne",  emoji:"⚽", color:C.green,  xp:20, notifyAt:"16:00" },
   ],
   weekendMorning: [
-    { id:"cviceni",    label:"Cvičení",     time:"Dopoledne",  emoji:"🏋️", color:C.green, xp:20 },
+    { id:"cviceni",    label:"Cvičení",     time:"Dopoledne",  emoji:"🏋️", color:C.green, xp:20, notifyAt:"10:00" },
   ],
   evening: [
-    { id:"cteni",       label:"Čtení",       time:"Večer",       emoji:"📖", color:C.purple, xp:15 },
-    { id:"vecerniZuby", label:"Čistit zuby", time:"Před spaním", emoji:"🦷", color:C.blue,   xp:10 },
-    { id:"vecerniLeky", label:"Večerní léky",time:"Noc",         emoji:"💊", color:C.red,    xp:10 },
+    { id:"cteni",       label:"Čtení",       time:"Večer",       emoji:"📖", color:C.purple, xp:15, notifyAt:"19:00" },
+    { id:"vecerniZuby", label:"Čistit zuby", time:"Před spaním", emoji:"🦷", color:C.blue,   xp:10, notifyAt:"20:30" },
+    { id:"vecerniLeky", label:"Večerní léky",time:"Noc",         emoji:"💊", color:C.red,    xp:10, notifyAt:"20:45" },
   ],
   schoolPrep: [
-    { id:"pripravaDoSkoly", label:"Příprava do školy", time:"Večer – na zítra", emoji:"🎒", color:C.orange, xp:15 },
+    { id:"pripravaDoSkoly", label:"Příprava do školy", time:"Večer – na zítra", emoji:"🎒", color:C.orange, xp:15, notifyAt:"19:30" },
   ],
 };
+
+// Load custom notification times (admin can override defaults)
+function getNotifyTimes() {
+  try { return JSON.parse(localStorage.getItem("habit_notify_times")||"{}"); } catch { return {}; }
+}
+function getHabitNotifyTime(habit) {
+  const custom = getNotifyTimes();
+  return custom[habit.id] ?? habit.notifyAt ?? null;
+}
 
 
 // ─── FOOD FACTS & NUTRITION DATA ─────────────────────────────────────────────
@@ -577,6 +586,52 @@ function ProfilePic({src,onUpload,size=64}){
       </div>
       <div style={{position:"absolute",bottom:-2,right:-2,width:22,height:22,borderRadius:11,background:C.blue,border:"3px solid white",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>📷</div>
     </div>
+  );
+}
+
+
+// ─── NOTIFY TIMES EDITOR ─────────────────────────────────────────────────────
+function NotifyTimesEditor(){
+  const allHabits=[
+    ...BASE_HABITS.morning,
+    ...BASE_HABITS.weekdayAfternoon,
+    ...BASE_HABITS.evening,
+    ...BASE_HABITS.schoolPrep,
+  ];
+  // deduplicate by id
+  const seen=new Set();
+  const habits=allHabits.filter(h=>{ if(seen.has(h.id)) return false; seen.add(h.id); return true; });
+
+  const [times,setTimes]=useState(()=>getNotifyTimes());
+  const [saved,setSaved]=useState(false);
+
+  const update=(id,val)=>{
+    const nt={...times,[id]:val};
+    setTimes(nt);
+    localStorage.setItem("habit_notify_times",JSON.stringify(nt));
+    setSaved(true);
+    setTimeout(()=>setSaved(false),1500);
+  };
+
+  return(
+    <Card pad="0">
+      {saved&&<div style={{background:C.green+"18",padding:"8px 16px",fontSize:13,fontWeight:600,color:C.green,textAlign:"center"}}>✓ Uloženo</div>}
+      {habits.map((h,i)=>{
+        const t=times[h.id]??h.notifyAt??"";
+        return(
+          <div key={h.id} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",borderBottom:i<habits.length-1?`1px solid ${C.sep}`:"none"}}>
+            <span style={{fontSize:20,flexShrink:0}}>{h.emoji}</span>
+            <div style={{flex:1,fontSize:14,fontWeight:500,color:C.label}}>{h.label}</div>
+            <input
+              type="time"
+              value={t}
+              onChange={e=>update(h.id,e.target.value)}
+              style={{width:90,height:36,borderRadius:10,border:`1.5px solid ${C.sep}`,padding:"0 8px",fontSize:14,color:C.label,outline:"none",fontFamily:"inherit",background:"white"}}
+            />
+          </div>
+        );
+      })}
+    </Card>
   );
 }
 
@@ -2399,6 +2454,41 @@ export default function App(){
     const timer = setTimeout(syncToFirebase, 2000);
     return () => clearTimeout(timer);
   }, [doneMap, totalStars, custodyActive, childName]);
+
+  // ── Notifikace ─────────────────────────────────────────────────────────────
+  useEffect(()=>{
+    // Požádat o povolení
+    if("Notification" in window && Notification.permission==="default"){
+      Notification.requestPermission();
+    }
+    // Kontrola každou minutu
+    const check=()=>{
+      if(Notification.permission!=="granted") return;
+      const now=new Date();
+      const hm=`${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`;
+      const todayKey=getTodayKey();
+      const done=(() => { try { return JSON.parse(localStorage.getItem("pk_done")||"{}"); } catch { return {}; } })()[todayKey]||{};
+      const allH=getHabits(now);
+      allH.forEach(h=>{
+        const t=getHabitNotifyTime(h);
+        if(!t||done[h.id]) return;
+        if(t===hm){
+          const sentKey=`notif_sent_${todayKey}_${h.id}`;
+          if(!sessionStorage.getItem(sentKey)){
+            sessionStorage.setItem(sentKey,"1");
+            new Notification(`${h.emoji} ${h.label}`, {
+              body:`Je čas na: ${h.label} (${t})`,
+              icon:"/favicon.ico",
+              tag:h.id,
+            });
+          }
+        }
+      });
+    };
+    check();
+    const interval=setInterval(check, 60000);
+    return ()=>clearInterval(interval);
+  }, []);
 
     useEffect(()=>{localStorage.setItem("pk_done",JSON.stringify(doneMap));},[doneMap]);
   useEffect(()=>{localStorage.setItem("pk_stars",totalStars.toString());},[totalStars]);
