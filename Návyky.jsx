@@ -2209,12 +2209,10 @@ function PetSetup(){
     const p={type,breed,name:name||(breedData?.label||"Mazlíček"),gender,age};
     localStorage.setItem("pet_config",JSON.stringify(p));
     setPet(p);setStep("done");
-    window.location.reload();
   };
   const remove=()=>{
     localStorage.removeItem("pet_config");
     setPet(null);setStep("type");setType("");setBreed("");setName("");setAge("");
-    window.location.reload();
   };
 
   // ─ DONE ────────────────────────────────────────────────────────────────────
@@ -2396,22 +2394,9 @@ export default function App(){
   const totalXP       =habits.reduce((s,h)=>s+h.xp,0);
   const allDone       =completedCount===habits.length&&habits.length>0;
 
-  // ── Firebase sync ──────────────────────────────────────────────────────────
-  const [fbLoaded, setFbLoaded] = useState(false);
-
+  // ── Firebase sync — pouze ukládání, žádný reload ─────────────────────────
   useEffect(()=>{
-    // Load from Firebase on first mount
-    loadFromFirebase().then(loaded => {
-      if (loaded && !fbLoaded) {
-        setFbLoaded(true);
-        setTimeout(() => window.location.reload(), 300);
-      }
-    });
-  }, []);
-
-  // Sync to Firebase whenever key state changes
-  useEffect(()=>{
-    const timer = setTimeout(syncToFirebase, 1500);
+    const timer = setTimeout(syncToFirebase, 2000);
     return () => clearTimeout(timer);
   }, [doneMap, totalStars, custodyActive, childName]);
 
