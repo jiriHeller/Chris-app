@@ -856,6 +856,13 @@ function AdminPanel({onClose}){
               </button>
             </Card>
           </div>
+
+          {/* Časy notifikací */}
+          <div>
+            <SectionLabel>🔔 Časy připomínek</SectionLabel>
+            <NotifyTimesEditor/>
+          </div>
+
         </div>
       </div>
     </div>
@@ -1133,7 +1140,7 @@ function HabitRow({habit,done,onToggle,index}){
         </div>
         <div style={{flex:1,textAlign:"left",minWidth:0}}>
           <div style={{fontSize:16,fontWeight:600,color:done?C.label2:C.label,textDecoration:done?"line-through":"none",letterSpacing:"-0.2px"}}>{habit.label}</div>
-          <div style={{fontSize:13,color:C.label3,marginTop:1}}>{habit.time}</div>
+          <div style={{fontSize:13,color:C.label3,marginTop:1}}>{habit.time}{getHabitNotifyTime(habit)?<span style={{marginLeft:6,fontWeight:600,color:C.blue}}>🔔 {getHabitNotifyTime(habit)}</span>:null}</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
           {done&&<span style={{fontSize:12,color:C.yellow,fontWeight:700}}>{habit.xp} b</span>}
