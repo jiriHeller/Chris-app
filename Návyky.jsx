@@ -144,16 +144,16 @@ const SUBJECT_CONTENT = {
     "6-9":{desc:"Přírodopis, zeměpis, fyzika, chemie — věda o světě.",
       tips:["Každý vědecký objev začal otázkou 'Proč?'!","Fyzika vysvětluje proč létají letadla i proč funguje internet.","Marie Curie měla dvě Nobelovy ceny!","Chemie je v jídle, lécích i v tobě!"],
       pomucky:["📗 Příslušná učebnice","📓 Sešit","🔬 Zvídavá mysl"]}}},
-  "Ppr":{label:"Pracovní práce",color:"#FF375F",emoji:"🔨",
-    grades:{"1-2":{desc:"Stříháme, lepíme, skládáme a tvoříme rukama.",
-      tips:["Stříhání trénuje prsty — šikovné prsty pomáhají i při psaní!","Origami vzniklo v Japonsku před 1400 lety!","Výroba věcí rukama rozvíjí mozek!","Každý vynálezce nejdřív tvoří rukama!"],
-      pomucky:["✂️ Nůžky","🖊️ Lepidlo","📐 Pravítko","🎨 Pastelky","Materiál dle zadání"]},
-    "3-5":{desc:"Tvoříme z různých materiálů a učíme se řemeslné dovednosti.",
-      tips:["Ruční práce rozvíjí mozek stejně jako matematika!","Da Vinci byl nejdřív řemeslník a pak umělec!","Origami se používá při vývoji raket NASA!","Modelování z hlíny snižuje stres!"],
-      pomucky:["✂️ Nůžky","🖊️ Lepidlo","🎨 Barvy","Materiál dle zadání"]},
-    "6-9":{desc:"Práce s materiály, elektronika a základy vaření.",
-      tips:["Opravit věc doma ušetří tisíce korun ročně!","Vaření je chemie v kuchyni!","Steve Jobs se učil řemeslo v garáži!","Elektrické obvody jsou základ každého zařízení."],
-      pomucky:["Dle zadání učitele 📋"]}}},
+  "Ppr":{label:"Pohybová průprava",color:"#FF375F",emoji:"🤸",
+    grades:{"1-2":{desc:"Hrajeme pohybové hry, cvičíme a učíme se základní pohybové dovednosti jako skok, hod a rovnováha.",
+      tips:["Pohyb rozvíjí mozek stejně jako čtení — čím víc se hýbeš, tím lépe myslíš!","Věděl jsi, že sport zlepšuje soustředění ve škole? Vědci to dokázali!","Každý sport světa začal jako hra — zkus vymyslet svůj!","Pohybová průprava tě připraví na každý sport!"],
+      pomucky:["👟 Cvičební obuv","👕 Pohodlné oblečení","💧 Lahev s vodou"]},
+    "3-5":{desc:"Rozvíjíme obratnost, rychlost a koordinaci pohybu. Hry v týmu učí spolupráci.",
+      tips:["Koordinace pohybu se trénuje — čím víc cvičíš, tím lépe ovládáš tělo!","Nejlepší sportovci na světě začali základní průpravou jako ty!","Pohyb uvolňuje endorfiny — hormony štěstí. Proto se po cvičení cítíš skvěle!","Pravidelný pohyb posiluje kosti a svaly — investice na celý život!"],
+      pomucky:["👟 Cvičební obuv","👕 Cvičební oblečení","💧 Lahev s vodou"]},
+    "6-9":{desc:"Sportovní průprava, atletika a rozvoj fyzické kondice.",
+      tips:["Fyzická kondice zlepšuje výkon ve škole — mozek potřebuje okysličenou krev!","Flexibilita a síla jsou základ každého sportu!","Pravidelný pohyb snižuje stres a zlepšuje náladu!","Top sportovci trénují základy celý život — nikdy nejsou nudné!"],
+      pomucky:["👟 Cvičební obuv","👕 Cvičební oblečení","💧 Lahev s vodou"]}}},
   "Hv":{label:"Hudební výchova",color:"#BF5AF2",emoji:"🎵",
     grades:{"1-2":{desc:"Zpíváme písničky, tleskáme rytmus a hrajeme na nástroje.",
       tips:["Zpívání uvolňuje endorfiny — přírodní látky štěstí!","Tlesk do rytmu trénuje koordinaci!","Mozart hrál na klavír od 3 let!","Hudba aktivuje více oblastí mozku než cokoliv jiného!"],
@@ -384,63 +384,65 @@ const BREEDS={
 function getPetHabits(pet){
   if(!pet||!pet.type||!pet.breed) return [];
   const n=pet.name||"Mazlíček";
-  const his=pet.gender==="f"?"její":"jeho";
   const breed=(BREEDS[pet.type]||[]).find(b=>b.id===pet.breed)||null;
   const type=pet.type;
-  const h=(id,label,time,emoji,color,xp)=>({id:`pet_${id}`,label,time,emoji,color,xp});
-  const morning=[],afternoon=[],evening=[];
+  // Helper: id, label, time (text), emoji, color, xp, notifyAt (HH:MM)
+  const h=(id,label,time,emoji,color,xp,notifyAt)=>({id:`pet_${id}`,label,time,emoji,color,xp,notifyAt});
+  const list=[];
   if(type==="dog"){
     const feeds=breed?.feeds||2,walkMin=breed?.walk_min||30,walks=breed?.walks||2;
-    morning.push(h("feed_m",`Nakrmit ${n} — ráno`,"Ráno","🍖","#FF9F0A",10));
-    morning.push(h("water",`Doplnit čerstvou vodu pro ${n}`,"Ráno","💧","#0A84FF",5));
-    morning.push(h("walk_m",`Venčit ${n} — ráno (${walkMin} min)`,"Ráno","🦮","#30D158",15));
-    if(walks>=3) afternoon.push(h("walk_d",`Venčit ${n} — polední procházka`,"Odpoledne","🦮","#30D158",10));
-    afternoon.push(h("play",`Hra a pohyb s ${n}`,"Odpoledne","🎾","#FF375F",10));
-    if(breed?.groom==="daily"||breed?.groom==="3x_week") afternoon.push(h("groom",`Česat srst ${n}`,"Odpoledne","🪮","#BF5AF2",10));
-    if(feeds>=2) evening.push(h("feed_e",`Nakrmit ${n} — večer`,"Večer","🍖","#FF9F0A",10));
-    evening.push(h("walk_e",`Venčit ${n} — večerní procházka`,"Večer","🌙","#5E5CE6",15));
-    evening.push(h("check",`Zkontrolovat uši, drápky a srst ${n}`,"Večer","🔍","#FFD60A",5));
+    list.push(h("feed_m",    `Nakrmit ${n} — ráno`,              "Ráno",       "🍖","#FF9F0A",10,"7:10"));
+    list.push(h("water",     `Doplnit čerstvou vodu pro ${n}`,   "Ráno",       "💧","#0A84FF",5, "7:05"));
+    list.push(h("walk_m",    `Venčit ${n} — ráno (${walkMin} min)`,"Ráno",     "🦮","#30D158",15,"7:30"));
+    if(walks>=3) list.push(h("walk_d",`Venčit ${n} — polední procházka`,"Odpoledne","🦮","#30D158",10,"12:00"));
+    list.push(h("play",      `Hra a pohyb s ${n}`,               "Odpoledne",  "🎾","#FF375F",10,"16:30"));
+    if(breed?.groom==="daily"||breed?.groom==="3x_week")
+      list.push(h("groom",   `Česat srst ${n}`,                  "Odpoledne",  "🪮","#BF5AF2",10,"17:00"));
+    if(feeds>=2) list.push(h("feed_e",`Nakrmit ${n} — večer`,    "Večer",      "🍖","#FF9F0A",10,"18:00"));
+    list.push(h("walk_e",    `Venčit ${n} — večerní procházka`,  "Večer",      "🦮","#5E5CE6",15,"19:00"));
+    list.push(h("check",     `Zkontrolovat uši, drápky a srst`,  "Večer",      "🔍","#FFD60A",5, "20:00"));
   } else if(type==="cat"){
-    morning.push(h("feed_m",`Nakrmit ${n} — ráno`,"Ráno","🐟","#BF5AF2",10));
-    morning.push(h("water","Doplnit čerstvou vodu","Ráno","💧","#0A84FF",5));
-    morning.push(h("litter",`Vyčistit záchodek ${n}`,"Ráno","🧹","#FF453A",15));
-    afternoon.push(h("play",`Interaktivní hra s ${n} (15 min)`,"Odpoledne","🧶","#FF9F0A",10));
-    if(breed?.groom==="daily"||breed?.groom==="3x_week") afternoon.push(h("groom",`Česat srst ${n}`,"Odpoledne","🪮","#BF5AF2",10));
-    evening.push(h("feed_e",`Nakrmit ${n} — večer`,"Večer","🐟","#BF5AF2",10));
-    evening.push(h("play2",`Večerní hra s ${n}`,"Večer","🌙","#5E5CE6",10));
+    list.push(h("feed_m",    `Nakrmit ${n} — ráno`,              "Ráno",       "🐟","#BF5AF2",10,"7:10"));
+    list.push(h("water",     `Doplnit čerstvou vodu`,            "Ráno",       "💧","#0A84FF",5, "7:05"));
+    list.push(h("litter",    `Vyčistit záchodek ${n}`,           "Ráno",       "🧹","#FF453A",15,"7:20"));
+    list.push(h("play",      `Interaktivní hra s ${n} (15 min)`, "Odpoledne",  "🧶","#FF9F0A",10,"17:00"));
+    if(breed?.groom==="daily"||breed?.groom==="3x_week")
+      list.push(h("groom",   `Česat srst ${n}`,                  "Odpoledne",  "🪮","#BF5AF2",10,"17:30"));
+    list.push(h("feed_e",    `Nakrmit ${n} — večer`,             "Večer",      "🐟","#BF5AF2",10,"18:00"));
+    list.push(h("play2",     `Večerní hra s ${n}`,               "Večer",      "🌙","#5E5CE6",10,"20:00"));
   } else if(type==="rabbit"||type==="guinea"){
-    morning.push(h("hay",`Doplnit seno pro ${n}`,"Ráno","🌾","#FFD60A",5));
-    morning.push(h("feed_m",`Ranní zelenina pro ${n}`,"Ráno","🥕","#FF375F",10));
-    morning.push(h("water","Vyčistit a doplnit vodu","Ráno","💧","#0A84FF",5));
-    afternoon.push(h("out",`Výběh ${n} mimo klec (min. 1 hod)`,"Odpoledne","🐇","#FF375F",15));
-    afternoon.push(h("play",`Mazlení a socializace s ${n}`,"Odpoledne","❤️","#FF375F",10));
-    evening.push(h("cage",`Uklidit klec a doplnit seno`,"Večer","🧹","#FF453A",15));
-    evening.push(h("feed_e",`Večerní granule pro ${n}`,"Večer","🥬","#30D158",10));
+    list.push(h("hay",       `Doplnit seno pro ${n}`,            "Ráno",       "🌾","#FFD60A",5, "7:30"));
+    list.push(h("feed_m",    `Ranní zelenina pro ${n}`,          "Ráno",       "🥕","#FF375F",10,"7:35"));
+    list.push(h("water",     `Vyčistit a doplnit vodu`,          "Ráno",       "💧","#0A84FF",5, "7:32"));
+    list.push(h("out",       `Výběh ${n} mimo klec (min. 1 hod)`,"Odpoledne",  "🐇","#FF375F",15,"15:00"));
+    list.push(h("play",      `Mazlení a socializace s ${n}`,     "Odpoledne",  "❤️","#FF375F",10,"16:00"));
+    list.push(h("cage",      `Uklidit klec a doplnit seno`,      "Večer",      "🧹","#FF453A",15,"19:00"));
+    list.push(h("feed_e",    `Večerní granule pro ${n}`,         "Večer",      "🥬","#30D158",10,"19:10"));
   } else if(type==="bird"){
-    morning.push(h("cover","Sundat přehoz z klece","Ráno","☀️","#FFD60A",5));
-    morning.push(h("feed_m",`Ranní krmení ${n}`,"Ráno","🌾","#30D158",10));
-    morning.push(h("water","Vyměnit vodu v napájedle","Ráno","💧","#0A84FF",5));
-    afternoon.push(h("out",`Výlet ${n} z klece (min. 1 hod)`,"Odpoledne","🦜","#30D158",15));
-    afternoon.push(h("play",`Interakce s ${n}`,"Odpoledne","🗣️","#BF5AF2",10));
-    evening.push(h("cage","Vyčistit dno klece","Večer","🧹","#FF453A",10));
-    evening.push(h("cover2","Přikrýt klec přerozem na noc","Před spaním","🌙","#5E5CE6",5));
+    list.push(h("cover",     `Sundat přehoz z klece`,            "Ráno",       "☀️","#FFD60A",5, "7:00"));
+    list.push(h("feed_m",    `Ranní krmení ${n}`,                "Ráno",       "🌾","#30D158",10,"7:05"));
+    list.push(h("water",     `Vyměnit vodu v napájedle`,         "Ráno",       "💧","#0A84FF",5, "7:08"));
+    list.push(h("out",       `Výlet ${n} z klece (min. 1 hod)`, "Odpoledne",  "🦜","#30D158",15,"15:00"));
+    list.push(h("play",      `Interakce s ${n}`,                 "Odpoledne",  "🗣️","#BF5AF2",10,"16:00"));
+    list.push(h("cage",      `Vyčistit dno klece`,               "Večer",      "🧹","#FF453A",10,"19:00"));
+    list.push(h("cover2",    `Přikrýt klec přerozem na noc`,     "Před spaním","🌙","#5E5CE6",5, "20:30"));
   } else if(type==="fish"){
-    morning.push(h("feed_m","Nakrmit rybičky — ráno","Ráno","🐠","#40CBE0",5));
-    morning.push(h("check","Zkontrolovat filtr a teplotu","Ráno","🔍","#5E5CE6",5));
-    evening.push(h("feed_e","Nakrmit rybičky — večer","Večer","🐠","#40CBE0",5));
+    list.push(h("feed_m",    `Nakrmit rybičky — ráno`,           "Ráno",       "🐠","#40CBE0",5, "7:30"));
+    list.push(h("check",     `Zkontrolovat filtr a teplotu`,     "Ráno",       "🔍","#5E5CE6",5, "7:32"));
+    list.push(h("feed_e",    `Nakrmit rybičky — večer`,          "Večer",      "🐠","#40CBE0",5, "18:00"));
   } else if(type==="hamster"){
-    evening.push(h("feed",`Nakrmit ${n} — večerní krmení`,"Večer","🌻","#FFD60A",10));
-    evening.push(h("water","Zkontrolovat a doplnit vodu","Večer","💧","#0A84FF",5));
-    evening.push(h("play",`Čas s ${n} — výběh nebo ruka`,"Večer","🐹","#FFD60A",10));
-    evening.push(h("cage","Částečný úklid klece","Večer","🧹","#FF453A",10));
+    list.push(h("feed",      `Nakrmit ${n} — večerní krmení`,    "Večer",      "🌻","#FFD60A",10,"19:00"));
+    list.push(h("water",     `Zkontrolovat a doplnit vodu`,      "Večer",      "💧","#0A84FF",5, "19:05"));
+    list.push(h("play",      `Čas s ${n} — výběh nebo ruka`,     "Večer",      "🐹","#FFD60A",10,"20:00"));
+    list.push(h("cage",      `Částečný úklid klece`,             "Večer",      "🧹","#FF453A",10,"19:30"));
   } else if(type==="turtle"){
-    morning.push(h("lamp",`Zapnout UV lampu pro ${n}`,"Ráno","💡","#FFD60A",5));
-    morning.push(h("feed",`Nakrmit ${n}`,"Ráno","🥬","#5E5CE6",10));
-    morning.push(h("water","Zkontrolovat vodu a filtr","Ráno","💧","#0A84FF",5));
-    afternoon.push(h("play",`Pozorování a kontakt s ${n}`,"Odpoledne","🐢","#30D158",10));
-    evening.push(h("lamp_off","Vypnout UV lampu","Večer","🌙","#5E5CE6",5));
+    list.push(h("lamp",      `Zapnout UV lampu pro ${n}`,        "Ráno",       "💡","#FFD60A",5, "7:00"));
+    list.push(h("feed",      `Nakrmit ${n}`,                     "Ráno",       "🥬","#5E5CE6",10,"9:00"));
+    list.push(h("water",     `Zkontrolovat vodu a filtr`,        "Ráno",       "💧","#0A84FF",5, "9:05"));
+    list.push(h("play",      `Pozorování a kontakt s ${n}`,      "Odpoledne",  "🐢","#30D158",10,"15:00"));
+    list.push(h("lamp_off",  `Vypnout UV lampu`,                 "Večer",      "🌙","#5E5CE6",5, "20:00"));
   }
-  return [...morning,...afternoon,...evening];
+  return list;
 }
 
 function loadPet(){
@@ -508,6 +510,25 @@ function getStreak() {
   return streak;
 }
 
+// Pořadí časových slotů pro řazení úkolů
+const TIME_ORDER = {
+  "Ráno":0, "Po snídani":1, "Dopoledne":2,
+  "Odpoledne":3, "Odpoledne/večer":4,
+  "Večer":5, "Večer – na zítra":6,
+  "Před spaním":7, "Noc":8,
+};
+function timeSlot(h){
+  // Pokud má notifyAt čas (HH:MM), použij ho jako číslo minut pro přesné řazení
+  const custom = getNotifyTimes();
+  const t = custom[h.id] ?? h.notifyAt ?? null;
+  if(t && /^\d{1,2}:\d{2}$/.test(t)){
+    const [hh,mm]=t.split(":").map(Number);
+    return hh*60+mm;
+  }
+  // Jinak použij pořadí textového slotu
+  return (TIME_ORDER[h.time] ?? 5) * 100;
+}
+
 function getHabits(date) {
   const dow=date.getDay(), isWE=dow===0||dow===6, hasSchoolTomorrow=dow>=0&&dow<=4;
   let list=[...BASE_HABITS.morning];
@@ -517,6 +538,8 @@ function getHabits(date) {
   if(hasSchoolTomorrow) list=[...list,...BASE_HABITS.schoolPrep];
   const pet=loadPet();
   if(pet) list=[...list,...getPetHabits(pet)];
+  // Seřadit podle času
+  list.sort((a,b)=>timeSlot(a)-timeSlot(b));
   return list;
 }
 
@@ -1720,6 +1743,7 @@ function TodayTab({habits,todayDone,onToggle,completedCount,earnedXP,earnedActXP
       />
 
       {dow>=0&&dow<=4&&(()=>{
+        const prepDone=!!todayDone["pripravaDoSkoly"];
         const hr=new Date().getHours(), mins=new Date().getMinutes();
         const timeVal=hr+(mins/60);
         const urgency=Math.max(0,Math.min(1,(timeVal-14)/(22-14)));
@@ -1751,13 +1775,33 @@ function TodayTab({habits,todayDone,onToggle,completedCount,earnedXP,earnedActXP
 
         return(
         <div style={{padding:"12px 20px 0"}}>
-          <div style={{
+          <div onClick={()=>onToggle("pripravaDoSkoly")} style={{
             position:"relative", overflow:"hidden", borderRadius:22,
-            border:`4px solid #111`,
-            boxShadow:`6px 6px 0 #111, 0 0 0 2px #111`,
-            background:"#FFFEF2",
+            border:`4px solid ${prepDone?"#30D158":"#111"}`,
+            boxShadow:`6px 6px 0 ${prepDone?"#30D158":"#111"}, 0 0 0 2px ${prepDone?"#30D158":"#111"}`,
+            background:prepDone?"#F0FFF4":"#FFFEF2",
             fontFamily:"'Impact','Arial Black','Arial',sans-serif",
+            cursor:"pointer",
+            transition:"all 0.4s ease",
           }}>
+            {/* Done overlay */}
+            {prepDone&&(
+              <div style={{
+                position:"absolute",inset:0,zIndex:10,
+                background:"rgba(48,209,88,0.12)",
+                display:"flex",alignItems:"center",justifyContent:"center",
+                pointerEvents:"none",
+              }}>
+                <div style={{
+                  background:"#30D158",borderRadius:"50%",
+                  width:64,height:64,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:32,
+                  boxShadow:"0 4px 20px rgba(48,209,88,0.5)",
+                  animation:"popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+                }}>✓</div>
+              </div>
+            )}
 
             {/* halftone dot bg */}
             <div style={{
