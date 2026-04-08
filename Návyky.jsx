@@ -2508,33 +2508,37 @@ export default function App(){
 
   // ── Notifikace ─────────────────────────────────────────────────────────────
   useEffect(()=>{
-    // Požádat o povolení
-    if("Notification" in window && Notification.permission==="default"){
-      Notification.requestPermission();
+    // Notifikace — jen pokud prohlížeč podporuje
+    const notifSupported = typeof window !== "undefined" && "Notification" in window;
+    if(notifSupported && Notification.permission==="default"){
+      try { Notification.requestPermission(); } catch(e){}
     }
-    // Kontrola každou minutu
     const check=()=>{
-      if(Notification.permission!=="granted") return;
-      const now=new Date();
-      const hm=`${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`;
-      const todayKey=getTodayKey();
-      const done=(() => { try { return JSON.parse(localStorage.getItem("pk_done")||"{}"); } catch { return {}; } })()[todayKey]||{};
-      const allH=getHabits(now);
-      allH.forEach(h=>{
-        const t=getHabitNotifyTime(h);
-        if(!t||done[h.id]) return;
-        if(t===hm){
-          const sentKey=`notif_sent_${todayKey}_${h.id}`;
-          if(!sessionStorage.getItem(sentKey)){
-            sessionStorage.setItem(sentKey,"1");
-            new Notification(`${h.emoji} ${h.label}`, {
-              body:`Je čas na: ${h.label} (${t})`,
-              icon:"/favicon.ico",
-              tag:h.id,
-            });
+      try {
+        if(!notifSupported || Notification.permission!=="granted") return;
+        const now=new Date();
+        const hm=`${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`;
+        const todayKey=getTodayKey();
+        const done=(() => { try { return JSON.parse(localStorage.getItem("pk_done")||"{}"); } catch { return {}; } })()[todayKey]||{};
+        const allH=getHabits(now);
+        allH.forEach(h=>{
+          const t=getHabitNotifyTime(h);
+          if(!t||done[h.id]) return;
+          if(t===hm){
+            const sentKey=`notif_sent_${todayKey}_${h.id}`;
+            if(!sessionStorage.getItem(sentKey)){
+              sessionStorage.setItem(sentKey,"1");
+              try {
+                new Notification(`${h.emoji} ${h.label}`, {
+                  body:`Je čas na: ${h.label} (${t})`,
+                  icon:"/favicon.ico",
+                  tag:h.id,
+                });
+              } catch(e){}
+            }
           }
-        }
-      });
+        });
+      } catch(e){}
     };
     check();
     const interval=setInterval(check, 60000);
